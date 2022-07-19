@@ -41,8 +41,8 @@ class BioCypherAdapter:
         Write nodes and edges to admin import csv files.
         """
 
-        self.write_nodes()
-        # self.write_edges()
+        # self.write_nodes()
+        self.write_edges()
         # self.bcy.write_import_call()
 
     def write_nodes(self):
@@ -89,29 +89,31 @@ class BioCypherAdapter:
                 _props = dict(zip(prop_items[1:], row[1:]))
                 yield _id, _label, _props
 
-
     def _get_edges(self, label):
         """
         Get edges from CSV.
         """
 
         loc_dict = {
-            "gene_int": "data/v0.5/genes/gene_int.csv",
-            "CRISPRKO": "data/v0.5/genes/CRISPRKO.csv",
-            "CFEinv": "data/v0.5/cellModels/CFEinv.csv",
-            "CFEobs": "data/v0.5/cellModels/CFEobs.csv",
-            "response": "data/v0.5/cellModels/response.csv",
-            "compound_Tsim": "data/v0.5/compounds/compound_Tsim.csv",
-            "compoundTarget": "data/v0.5/compounds/compoundTarget.csv",
+            "gene_int": "data/v0.5/genes/gene_int_all.csv",
+            "CRISPRKO": "data/v0.5/cellModels/CRISPRKO_all.csv",
+            "CFEinv": "data/v0.5/cellModels/CFEinv_all.csv",
+            "CFEobs": "data/v0.5/cellModels/CFEobs_all.csv",
+            "response": "data/v0.5/compounds/response_all.csv",
+            "compound_Tsim": "data/v0.5/compounds/compound_Tsim_ALL.csv",
+            "compoundTarget": "data/v0.5/compounds/compoundTarget_lit.csv",
         }
 
         # read csv for each label
         with(open(loc_dict[label], "r")) as f:
             reader = csv.reader(f)
-            next(reader)
-            edges = [row for row in reader]
-
-        return edges
+            prop_items = next(reader)
+            for row in reader:
+                _src = row[0]
+                _tar = row[1]
+                _label = label
+                _props = dict(zip(prop_items[2:], row[2:]))
+                yield _src, _tar, _label, _props
 
 def _process_node_id(_id, _type):
     """

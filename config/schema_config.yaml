@@ -129,12 +129,12 @@ PostTranslationalInteraction:
   properties:
    source: str # uniprot ids
    target: str
-   isDirected: str
-   isStimulation: str
-   isInhibition: str
-   consensusDirection: str
-   consensusStimulation: str
-   consensusInhibition: str
+   isDirected: int
+   isStimulation: int
+   isInhibition: int
+   consensusDirection: int
+   consensusStimulation: int
+   consensusInhibition: int
    dipURL: str
    sources: str
    references: str
