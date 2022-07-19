@@ -1,1 +1,6 @@
 data/
+.vscode
+biocypher-*
+.DS_Store
+__pychache__
+*.pyc

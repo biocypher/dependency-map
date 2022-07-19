@@ -1,0 +1,205 @@
+title: BioCypher adapter for Dependency Map graph
+
+# Nodes
+
+Gene:
+  represented_as: node
+  preferred_id: HGNC
+  label_in_input: gene
+  properties:
+   geneId: str
+   contig: int
+   strand: str
+   start: int
+   end: int
+   biotype: str
+   genomeRelease: int
+   species: str
+   BAGELEssential: bool
+
+SmallMolecule:
+  represented_as: node
+  preferred_id: compound_name
+  label_in_input: compound
+  properties:
+    atcClassifications: str
+    availabilityType: str
+    biotherapeutic: str
+    blackBoxWarning: str
+    chebiParId: str
+    chirality: str
+    crossReferences: str
+    dosedIngredient: str
+    firstApproval: str
+    firstInClass: str
+    helmNotation: str
+    indicationClass: str
+    inorganicFlag: str
+    maxPhase: str
+    moleculeChemblId: str
+    moleculeHierarchy: str
+    moleculeProperties: str
+    moleculeStructures: str
+    moleculeSynonyms: str
+    moleculeType: str
+    naturalProduct: str
+    oral: str
+    parenteral: str
+    polymerFlag: str
+    prefName: str
+    prodrug: str
+    score: str
+    structureType: str
+    therapeuticFlag: str
+    topical: str
+    usanStem: str
+    usanStemDefinition: str
+    usanSubstem: str
+    usanYear: str
+    withdrawnClass: str
+    withdrawnCountry: str
+    withdrawnFlag: str
+    withdrawnReason: str
+    withdrawnYear: str
+    molecularWeight: str
+    smiles: str
+
+CellLine:
+  represented_as: node
+  preferred_id: name
+  label_in_input: cellModel
+  properties:
+    modelId: str
+    synonyms: str
+    modelType: str
+    growthProperties: str
+    doi: str
+    pmed: str
+    modelTreatment: str
+    modelComments: str
+    msiStatus: str
+    mutationalBurden: str
+    ploidy: str
+    parentId: str
+    mutationData: str
+    methylationData: str
+    expressionData: str
+    cnvData: str
+    crisprKoData: str
+    fusionData: str
+    drugData: str
+    rnaseqData: str
+    sampleId: str
+    tissue: str
+    tissueStatus: str
+    cancerType: str
+    cancerTypeDetail: str
+    cancerTypeNcitId: str
+    ageAtSampling: str
+    samplingDay: str
+    samplingMonth: str
+    samplingYear: str
+    sampleSite: str
+    tnmT: str
+    tumourGrade: str
+    patientId: str
+    species: str
+    gender: str
+    ethnicity: str
+    smokingStatus: str
+    cosmicId: str
+    broadId: str
+    ccleId: str
+    rrid: str
+    suppliers: str
+
+SequenceVariant: # could be more granular - CKG somatic mutation etc
+  represented_as: node
+  preferred_id: name
+  label_in_input: CFE
+
+# Edges
+
+PostTranslationalInteraction:
+  represented_as: edge
+  preferred_id: custom
+  source: Gene # implications of "flattening" gene and protein?
+  target: Gene 
+  label_in_input: gene_int
+  properties:
+   source: str # uniprot ids
+   target: str
+   isDirected: str
+   isStimulation: str
+   isInhibition: str
+   consensusDirection: str
+   consensusStimulation: str
+   consensusInhibition: str
+   dipURL: str
+   sources: str
+   references: str
+
+GeneKnockoutToCellLineAssociation:
+  is_a: [GeneToCellLineAssociation, Association]
+  represented_as: edge
+  preferred_id: custom
+  source: Gene
+  target: CellLine
+  label_in_input: CRISPRKO
+  properties:
+    depScoreBin: float
+    depScoreNorm: float
+
+VariantToGeneAssociation:
+  represented_as: edge
+  preferred_id: custom
+  source: SequenceVariant
+  target: Gene
+  label_in_input: CFEinv
+
+VariantToCellLineAssociation:
+  is_a: Association
+  represented_as: edge
+  preferred_id: custom
+  source: SequenceVariant
+  target: CellLine
+  label_in_input: CFEobs
+
+# this is a shortcut; treatment includes disease and drug, which in turn
+# links to molecular mixture, which is not equivalent to small molecule
+# (although i also did not find a link between drug and small molecule á
+# la "has active ingredient"). molecular mixture however has compound
+# identifiers (eg pubchem or chembl)
+SequenceVariantModulatesTreatmentAssociation:
+  represented_as: edge
+  preferred_id: custom
+  source: SequenceVariant
+  target: SmallMolecule
+  label_in_input: response
+  properties:
+   source: str
+   ic50: float
+   ic50<MaxConc: bool
+   ic50Ratio: float
+
+ChemicalToChemicalSimilarityAssociation:
+  is_a: ChemicalToChemicalAssociation
+  represented_as: edge
+  preferred_id: custom
+  source: SmallMolecule
+  target: SmallMolecule
+  label_in_input: compound_Tsim
+  properties:
+    tanimotoSim: float
+
+SmallMoleculeToGeneAssociation:
+  is_a: ChemicalToGeneAssociation
+  represented_as: edge
+  preferred_id: custom
+  source: SmallMolecule
+  target: Gene
+  label_in_input: compoundTarget
+  properties:
+    drugChemblId: str
+    targetEnsgId: str
+    targetAnnotSource: str
