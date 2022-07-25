@@ -36,12 +36,14 @@ class BioCypherAdapter:
         # start writer
         self.bcy.start_bl_adapter()
         self.bcy.start_batch_writer(dirname=dirname, db_name=self.db_name)
+        # options
         self.bcy.batch_writer.skip_bad_relationships = True
         self.bcy.batch_writer.skip_duplicate_nodes = True
 
     def write_to_csv_for_admin_import(self):
         """
-        Write nodes and edges to admin import csv files.
+        Write nodes and edges to admin import csv files. Wrapper
+        function for individual write_nodes and write_edges.
         """
 
         self.write_nodes()
@@ -50,7 +52,8 @@ class BioCypherAdapter:
 
     def write_nodes(self):
         """
-        Write nodes to admin import csv files.
+        Write nodes to admin import csv files using the BioCypher batch
+        writer, per label.
         """
 
         node_labels = ["gene", "compound", "cellModel", "CFE"]
@@ -61,7 +64,8 @@ class BioCypherAdapter:
 
     def write_edges(self) -> None:
         """
-        Write edges to admin import csv files.
+        Write edges to admin import csv files using the BioCypher batch
+        writer, per label.
         """
 
         rel_labels = [
@@ -80,7 +84,13 @@ class BioCypherAdapter:
 
     def _get_nodes(self, label):
         """
-        Get nodes from CSV.
+        Get nodes from CSV and yield them to the batch writer.
+
+        Args:
+            label: input label of nodes to be read
+
+        Returns:
+            generator of tuples representing nodes
         """
 
         loc_dict = {
@@ -104,7 +114,13 @@ class BioCypherAdapter:
 
     def _get_edges(self, label):
         """
-        Get edges from CSV.
+        Get edges from CSV and yield them to the batch writer.
+
+        Args:
+            label: input label of edges to be read
+
+        Returns:
+            generator of tuples representing edges
         """
 
         loc_dict = {
