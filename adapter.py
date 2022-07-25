@@ -6,7 +6,7 @@ BioCypher - CKG prototype
 """
 
 import csv
-import os
+
 import biocypher
 from biocypher._logger import logger
 
@@ -30,20 +30,23 @@ class BioCypherAdapter:
             offline=True,  # set offline to true,
             # connect to running DB for input data via the neo4j driver
             user_schema_config_path=user_schema_config_path,
-            delimiter="¦",
+            quote_char='"',
         )
-        # # start writer
-        # self.bcy.start_bl_adapter()
-        # self.bcy.start_batch_writer(dirname=dirname, db_name=self.db_name)
+
+        # start writer
+        self.bcy.start_bl_adapter()
+        self.bcy.start_batch_writer(dirname=dirname, db_name=self.db_name)
+        self.bcy.batch_writer.skip_bad_relationships = True
+        self.bcy.batch_writer.skip_duplicate_nodes = True
 
     def write_to_csv_for_admin_import(self):
         """
         Write nodes and edges to admin import csv files.
         """
 
-        # self.write_nodes()
+        self.write_nodes()
         self.write_edges()
-        # self.bcy.write_import_call()
+        self.bcy.write_import_call()
 
     def write_nodes(self):
         """
@@ -61,7 +64,15 @@ class BioCypherAdapter:
         Write edges to admin import csv files.
         """
 
-        rel_labels = ["gene_int", "CRISPRKO", "CFEinv", "CFEobs", "response", "compound_Tsim", "compoundTarget"]
+        rel_labels = [
+            "gene_int",
+            "CRISPRKO",
+            "CFEinv",
+            "CFEobs",
+            "response",
+            "compound_Tsim",
+            "compoundTarget",
+        ]
 
         for label in rel_labels:
 
@@ -80,13 +91,15 @@ class BioCypherAdapter:
         }
 
         # read csv for each label
-        with(open(loc_dict[label], "r")) as f:
+        with (open(loc_dict[label], "r")) as f:
             reader = csv.reader(f)
             prop_items = next(reader)
             for row in reader:
-                _id = row[0]
+                _id = _process_node_id(row[0], label)
                 _label = label
-                _props = dict(zip(prop_items[1:], row[1:]))
+                _props = _process_properties(
+                    dict(zip(prop_items[1:], row[1:]))
+                )
                 yield _id, _label, _props
 
     def _get_edges(self, label):
@@ -105,19 +118,40 @@ class BioCypherAdapter:
         }
 
         # read csv for each label
-        with(open(loc_dict[label], "r")) as f:
+        with (open(loc_dict[label], "r")) as f:
             reader = csv.reader(f)
             prop_items = next(reader)
             for row in reader:
-                _src = row[0]
-                _tar = row[1]
+                _src = _process_node_id(row[0], label)
+                _tar = _process_node_id(row[1], label)
                 _label = label
-                _props = dict(zip(prop_items[2:], row[2:]))
+                _props = _process_properties(
+                    dict(zip(prop_items[2:], row[2:]))
+                )
                 yield _src, _tar, _label, _props
+
 
 def _process_node_id(_id, _type):
     """
-    Add prefixes to avoid multiple assignment.
+    Add prefixes to avoid multiple assignment. Fix other small issues.
     """
 
+    if '"' in _id:
+        _id = _id.replace('"', "")
+
     return _id
+
+
+def _process_properties(_props):
+    """
+    Process properties.
+    """
+
+    for key, value in _props.items():
+        if '"' in value:
+            _props[key] = value.replace('"', "")
+
+    return _props
+
+
+# multi-line fields: only due to line 832 in cellModels_all.csv?

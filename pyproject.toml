@@ -6,9 +6,14 @@ authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-biocypher = {path = "../BioCypher"}
+black = "^22.6.0"
+isort = "^5.10.1"
+biocypher = {path = "../BioCypher/", develop = true}
 
 [tool.poetry.dev-dependencies]
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

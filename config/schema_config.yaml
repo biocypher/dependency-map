@@ -8,14 +8,14 @@ Gene:
   label_in_input: gene
   properties:
    geneId: str
-   contig: int
+   contig: str
    strand: str
    start: int
    end: int
    biotype: str
    genomeRelease: int
    species: str
-   BAGELEssential: bool
+   BAGELEssential: str
 
 SmallMolecule:
   represented_as: node
@@ -179,7 +179,7 @@ SequenceVariantModulatesTreatmentAssociation:
   properties:
    source: str
    ic50: float
-   ic50<MaxConc: bool
+   ic50<MaxConc: str
    ic50Ratio: float
 
 ChemicalToChemicalSimilarityAssociation:
