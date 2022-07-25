@@ -26,3 +26,18 @@ After import, and in case the database in point did not exist yet, the
 database can be created and activated in the Neo4j browser with `:use
 system`, `create database <db_name>`, `:use <db_name>`. At this point,
 the DBMS needs to be running.
+
+## Installation
+
+The project can be installed using poetry:
+
+```
+git clone https://github.com/saezlab/BioCypher
+git clone https://github.com/saezlab/DepMap-BioCypher
+cd DepMap-BioCypher
+poetry install
+```
+
+The installation assumes a clone of the BioCypher repo to be placed in
+the same parent folder (e.g., `/User/GitHub`), which is the reason for
+the first line.
