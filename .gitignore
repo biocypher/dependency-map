@@ -4,3 +4,4 @@ biocypher-*
 .DS_Store
 __pychache__
 *.pyc
+*.prof
