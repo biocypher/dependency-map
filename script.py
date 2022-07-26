@@ -8,12 +8,17 @@ PROFILE = False
 
 
 def main():
+    """
+    Run adapter to import data into Neo4j.
+
+    Optionally, run with profiling.
+    """
     if PROFILE:
         profile = cProfile.Profile()
         profile.enable()
 
+    # create and run adapter
     adapter = BioCypherAdapter(db_name="import")
-
     adapter.write_to_csv_for_admin_import()
 
     if PROFILE:
@@ -23,8 +28,9 @@ def main():
         sortby = pstats.SortKey.CUMULATIVE
         ps = pstats.Stats(profile, stream=s).sort_stats(sortby)
         ps.print_stats()
-        # print(s.getvalue())
+
         ps.dump_stats("adapter.prof")
+        # look at stats using snakeviz
 
 
 if __name__ == "__main__":
