@@ -56,11 +56,7 @@ class BioCypherAdapter:
         writer, per label.
         """
 
-        node_labels = ["gene", "compound", "cellModel", "CFE"]
-
-        for label in node_labels:
-
-            self.bcy.write_nodes(self._get_nodes(label))
+        self.bcy.write_nodes(self._get_nodes())
 
     def write_edges(self) -> None:
         """
@@ -68,21 +64,9 @@ class BioCypherAdapter:
         writer, per label.
         """
 
-        rel_labels = [
-            "gene_int",
-            "CRISPRKO",
-            "CFEinv",
-            "CFEobs",
-            "response",
-            "compound_Tsim",
-            "compoundTarget",
-        ]
+        self.bcy.write_edges(self._get_edges())
 
-        for label in rel_labels:
-
-            self.bcy.write_edges(self._get_edges(label))
-
-    def _get_nodes(self, label):
+    def _get_nodes(self):
         """
         Get nodes from CSV and yield them to the batch writer.
 
@@ -100,19 +84,23 @@ class BioCypherAdapter:
             "CFE": "data/v0.5/cellModels/CFE_all.csv",
         }
 
-        # read csv for each label
-        with (open(loc_dict[label], "r")) as f:
-            reader = csv.reader(f)
-            prop_items = next(reader)
-            for row in reader:
-                _id = _process_node_id(row[0], label)
-                _label = label
-                _props = _process_properties(
-                    dict(zip(prop_items[1:], row[1:]))
-                )
-                yield _id, _label, _props
+        node_labels = ["gene", "compound", "cellModel", "CFE"]
 
-    def _get_edges(self, label):
+        for label in node_labels:
+            # read csv for each label
+
+            with (open(loc_dict[label], "r")) as f:
+                reader = csv.reader(f)
+                prop_items = next(reader)
+                for row in reader:
+                    _id = _process_node_id(row[0], label)
+                    _label = label
+                    _props = _process_properties(
+                        dict(zip(prop_items[1:], row[1:]))
+                    )
+                    yield _id, _label, _props
+
+    def _get_edges(self):
         """
         Get edges from CSV and yield them to the batch writer.
 
@@ -133,18 +121,30 @@ class BioCypherAdapter:
             "compoundTarget": "data/v0.5/compounds/compoundTarget_lit.csv",
         }
 
-        # read csv for each label
-        with (open(loc_dict[label], "r")) as f:
-            reader = csv.reader(f)
-            prop_items = next(reader)
-            for row in reader:
-                _src = _process_node_id(row[0], label)
-                _tar = _process_node_id(row[1], label)
-                _label = label
-                _props = _process_properties(
-                    dict(zip(prop_items[2:], row[2:]))
-                )
-                yield _src, _tar, _label, _props
+        rel_labels = [
+            "gene_int",
+            "CRISPRKO",
+            "CFEinv",
+            "CFEobs",
+            "response",
+            "compound_Tsim",
+            "compoundTarget",
+        ]
+
+        for label in rel_labels:
+
+            # read csv for each label
+            with (open(loc_dict[label], "r")) as f:
+                reader = csv.reader(f)
+                prop_items = next(reader)
+                for row in reader:
+                    _src = _process_node_id(row[0], label)
+                    _tar = _process_node_id(row[1], label)
+                    _label = label
+                    _props = _process_properties(
+                        dict(zip(prop_items[2:], row[2:]))
+                    )
+                    yield _src, _tar, _label, _props
 
 
 def _process_node_id(_id, _type):
