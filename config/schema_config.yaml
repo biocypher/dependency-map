@@ -2,7 +2,7 @@ title: BioCypher adapter for Dependency Map graph
 
 # Nodes
 
-Gene:
+gene:
   represented_as: node
   preferred_id: HGNC
   label_in_input: gene
@@ -17,7 +17,7 @@ Gene:
    species: str
    BAGELEssential: str
 
-SmallMolecule:
+small molecule:
   represented_as: node
   preferred_id: compound_name
   label_in_input: compound
@@ -64,7 +64,7 @@ SmallMolecule:
     molecularWeight: str
     smiles: str
 
-CellLine:
+cell line:
   represented_as: node
   preferred_id: name
   label_in_input: cellModel
@@ -113,18 +113,18 @@ CellLine:
     rrid: str
     suppliers: str
 
-SequenceVariant: # could be more granular - CKG somatic mutation etc
+sequence variant: # could be more granular - CKG somatic mutation etc
   represented_as: node
   preferred_id: name
   label_in_input: CFE
 
 # Edges
 
-PostTranslationalInteraction:
+post translational interaction:
   represented_as: edge
   preferred_id: custom
-  source: Gene # implications of "flattening" gene and protein?
-  target: Gene 
+  source: gene # implications of "flattening" gene and protein?
+  target: gene 
   label_in_input: gene_int
   properties:
    source: str # uniprot ids
@@ -139,30 +139,30 @@ PostTranslationalInteraction:
    sources: str
    references: str
 
-GeneKnockoutToCellLineAssociation:
-  is_a: [GeneToCellLineAssociation, Association]
+gene knockout to cell line association:
+  is_a: [gene to cell line association, association]
   represented_as: edge
   preferred_id: custom
-  source: Gene
-  target: CellLine
+  source: gene
+  target: cell line
   label_in_input: CRISPRKO
   properties:
     depScoreBin: float
     depScoreNorm: float
 
-VariantToGeneAssociation:
+variant to gene association:
   represented_as: edge
   preferred_id: custom
-  source: SequenceVariant
-  target: Gene
+  source: sequence variant
+  target: gene
   label_in_input: CFEinv
 
-VariantToCellLineAssociation:
-  is_a: Association
+variant to cell line association:
+  is_a: association
   represented_as: edge
   preferred_id: custom
-  source: SequenceVariant
-  target: CellLine
+  source: sequence variant
+  target: cell line
   label_in_input: CFEobs
 
 # this is a shortcut; treatment includes disease and drug, which in turn
@@ -170,11 +170,11 @@ VariantToCellLineAssociation:
 # (although i also did not find a link between drug and small molecule á
 # la "has active ingredient"). molecular mixture however has compound
 # identifiers (eg pubchem or chembl)
-SequenceVariantModulatesTreatmentAssociation:
+sequence variant modulates treatment association:
   represented_as: edge
   preferred_id: custom
-  source: SequenceVariant
-  target: SmallMolecule
+  source: sequence variant
+  target: small molecule
   label_in_input: response
   properties:
    source: str
@@ -182,22 +182,22 @@ SequenceVariantModulatesTreatmentAssociation:
    ic50<MaxConc: str
    ic50Ratio: float
 
-ChemicalToChemicalSimilarityAssociation:
-  is_a: ChemicalToChemicalAssociation
+chemical to chemical similarity association:
+  is_a: chemical to chemical association
   represented_as: edge
   preferred_id: custom
-  source: SmallMolecule
-  target: SmallMolecule
+  source: small molecule
+  target: small molecule
   label_in_input: compound_Tsim
   properties:
     tanimotoSim: float
 
-SmallMoleculeToGeneAssociation:
-  is_a: ChemicalToGeneAssociation
+small molecule to gene association:
+  is_a: chemical to gene association
   represented_as: edge
   preferred_id: custom
-  source: SmallMolecule
-  target: Gene
+  source: small molecule
+  target: gene
   label_in_input: compoundTarget
   properties:
     drugChemblId: str
