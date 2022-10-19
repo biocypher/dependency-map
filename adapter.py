@@ -46,9 +46,16 @@ class BioCypherAdapter:
         function for individual write_nodes and write_edges.
         """
 
+        # writing
         self.write_nodes()
         self.write_edges()
+        
+        # import call
         self.bcy.write_import_call()
+
+        # additional log information
+        self.bcy.log_missing_bl_types()
+        self.bcy.log_duplicates()
 
     def write_nodes(self):
         """
