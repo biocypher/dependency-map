@@ -2,10 +2,10 @@ import cProfile
 import io
 import pstats
 
-from adapter import BioCypherAdapter
+from adapter import DepMapAdapter
+import biocypher
 
 PROFILE = False
-
 
 def main():
     """
@@ -17,9 +17,34 @@ def main():
         profile = cProfile.Profile()
         profile.enable()
 
-    # create and run adapter
-    adapter = BioCypherAdapter(db_name="import")
-    adapter.write_to_csv_for_admin_import()
+    ###############
+    # ACTUAL CODE #
+    ###############
+    
+    # start biocypher
+    driver = biocypher.Driver(
+        offline=True,
+        db_name="neo4j",
+        user_schema_config_path="config/schema_config.yaml",
+        quote_char='"',
+    )
+
+    # create adapter
+    depmap = DepMapAdapter()
+
+    # write nodes and edges to csv
+    driver.write_nodes(depmap.get_nodes())
+    driver.write_edges(depmap.get_edges())
+
+    # convenience and stats
+    driver.write_import_call()
+    driver.log_missing_bl_types()
+    driver.log_duplicates()
+    driver.show_ontology_structure()
+
+    ######################
+    # END OF ACTUAL CODE #
+    ######################
 
     if PROFILE:
         profile.disable()

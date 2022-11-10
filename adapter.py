@@ -7,73 +7,21 @@ BioCypher - CKG prototype
 
 import csv
 
-import biocypher
 from biocypher._logger import logger
 
 logger.debug(f"Loading module {__name__}.")
 
 
-class BioCypherAdapter:
+class DepMapAdapter:
     def __init__(
         self,
-        dirname=None,
-        db_name="neo4j",
         id_batch_size: int = int(1e6),
-        user_schema_config_path="config/schema_config.yaml",
     ):
 
-        self.db_name = db_name
         self.id_batch_size = id_batch_size
 
-        # write driver
-        self.bcy = biocypher.Driver(
-            offline=True,  # set offline to true,
-            # connect to running DB for input data via the neo4j driver
-            user_schema_config_path=user_schema_config_path,
-            quote_char='"',
-        )
 
-        # start writer
-        self.bcy.start_bl_adapter()
-        self.bcy.start_batch_writer(dirname=dirname, db_name=self.db_name)
-        # options
-        self.bcy.batch_writer.skip_bad_relationships = True
-        self.bcy.batch_writer.skip_duplicate_nodes = True
-
-    def write_to_csv_for_admin_import(self):
-        """
-        Write nodes and edges to admin import csv files. Wrapper
-        function for individual write_nodes and write_edges.
-        """
-
-        # writing
-        self.write_nodes()
-        self.write_edges()
-        
-        # import call
-        self.bcy.write_import_call()
-
-        # additional log information
-        self.bcy.log_missing_bl_types()
-        self.bcy.log_duplicates()
-
-    def write_nodes(self):
-        """
-        Write nodes to admin import csv files using the BioCypher batch
-        writer, per label.
-        """
-
-        self.bcy.write_nodes(self._get_nodes())
-
-    def write_edges(self) -> None:
-        """
-        Write edges to admin import csv files using the BioCypher batch
-        writer, per label.
-        """
-
-        self.bcy.write_edges(self._get_edges())
-
-    def _get_nodes(self):
+    def get_nodes(self):
         """
         Get nodes from CSV and yield them to the batch writer.
 
@@ -107,7 +55,7 @@ class BioCypherAdapter:
                     )
                     yield _id, _label, _props
 
-    def _get_edges(self):
+    def get_edges(self):
         """
         Get edges from CSV and yield them to the batch writer.
 
