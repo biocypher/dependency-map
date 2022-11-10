@@ -117,8 +117,8 @@ class DepMapAdapter:
                 reader = csv.reader(f)
                 prop_items = next(reader)
                 for row in reader:
-                    _src = _process_node_id(row[0], label)
-                    _tar = _process_node_id(row[1], label)
+                    _src = _process_source_id(row[0], label)
+                    _tar = _process_target_id(row[1], label)
                     _label = label
                     _props = _process_properties(
                         dict(zip(prop_items[2:], row[2:]))
@@ -145,6 +145,43 @@ def _process_node_id(_id, _type):
 
     return _id
 
+def _process_source_id(_id, _type):
+    """
+    Process source ids.
+    """
+
+    if _type in ["gene_int", "CRISPRKO"]:
+
+        _id = normalize_curie("hgnc.symbol:" + _id)
+
+    elif _type in ["CFEinv", "CFEobs", "response"]:
+
+        _id = "variant:" + _id
+
+    elif _type in ["compound_Tsim", "compoundTarget"]:
+        
+        _id = "compoundname:" + _id
+
+    return _id
+
+def _process_target_id(_id, _type):
+    """
+    Process target ids.
+    """
+
+    if _type in ["gene_int", "CFEinv", "compoundTarget"]:
+
+        _id = normalize_curie("hgnc.symbol:" + _id)
+
+    elif _type in ["CRISPRKO", "CFEobs"]:
+
+        _id = normalize_curie("cosmic.cell:" + _id)
+
+    elif _type in ["response", "compound_Tsim"]:
+
+        _id = "compoundname:" + _id
+
+    return _id
 
 def _process_properties(_props):
     """
