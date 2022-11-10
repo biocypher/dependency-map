@@ -135,7 +135,7 @@ def _process_node_id(_id, _type):
         _id = _id.replace('"', "")
 
     if _type == "gene":
-        _id = normalize_curie("ensembl:" + _id)
+        _id = normalize_curie("hgnc.symbol:" + _id)
     elif _type == "cellModel":
         _id = normalize_curie("cosmic.cell:" + _id)
     elif _type == "compound":

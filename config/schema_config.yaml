@@ -4,7 +4,7 @@ title: BioCypher adapter for Dependency Map graph
 
 gene:
   represented_as: node
-  preferred_id: HGNC
+  preferred_id: hgnc.symbol
   label_in_input: gene
   properties:
    geneId: str
@@ -19,7 +19,7 @@ gene:
 
 small molecule:
   represented_as: node
-  preferred_id: compound_name
+  preferred_id: name
   label_in_input: compound
   properties:
     atcClassifications: str
@@ -66,7 +66,7 @@ small molecule:
 
 cell line:
   represented_as: node
-  preferred_id: name
+  preferred_id: cosmic.cell
   label_in_input: cellModel
   properties:
     modelId: str
@@ -122,7 +122,6 @@ sequence variant: # could be more granular - CKG somatic mutation etc
 
 pairwise gene to gene interaction:
   represented_as: edge
-  preferred_id: custom
   source: gene # implications of "flattening" gene and protein?
   target: gene 
   label_in_input: gene_int
@@ -142,7 +141,6 @@ pairwise gene to gene interaction:
 gene knockout to cell line association:
   is_a: [gene to cell line association, association]
   represented_as: edge
-  preferred_id: custom
   source: gene
   target: cell line
   label_in_input: CRISPRKO
@@ -152,7 +150,6 @@ gene knockout to cell line association:
 
 variant to gene association:
   represented_as: edge
-  preferred_id: custom
   source: sequence variant
   target: gene
   label_in_input: CFEinv
@@ -160,7 +157,6 @@ variant to gene association:
 variant to cell line association:
   is_a: association
   represented_as: edge
-  preferred_id: custom
   source: sequence variant
   target: cell line
   label_in_input: CFEobs
@@ -172,7 +168,6 @@ variant to cell line association:
 # identifiers (eg pubchem or chembl)
 sequence variant modulates treatment association:
   represented_as: edge
-  preferred_id: custom
   source: sequence variant
   target: small molecule
   label_in_input: response
@@ -185,7 +180,6 @@ sequence variant modulates treatment association:
 chemical to chemical similarity association:
   is_a: chemical to chemical association
   represented_as: edge
-  preferred_id: custom
   source: small molecule
   target: small molecule
   label_in_input: compound_Tsim
@@ -195,7 +189,6 @@ chemical to chemical similarity association:
 small molecule to gene association:
   is_a: chemical to gene association
   represented_as: edge
-  preferred_id: custom
   source: small molecule
   target: gene
   label_in_input: compoundTarget

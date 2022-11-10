@@ -27,6 +27,8 @@ def main():
         db_name="neo4j",
         user_schema_config_path="config/schema_config.yaml",
         quote_char='"',
+        skip_duplicate_nodes=True,
+        skip_bad_relationships=True,
     )
 
     # select fields from adapter
