@@ -9,6 +9,7 @@ python = "^3.9"
 isort = "^5.10.1"
 biocypher = {path = "../BioCypher/", develop = true}
 snakeviz = "^2.1.1"
+bioregistry = "^0.6.9"
 
 [tool.poetry.dev-dependencies]
 
