@@ -6,7 +6,6 @@ authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-black = "^22.6.0"
 isort = "^5.10.1"
 biocypher = {path = "../BioCypher/", develop = true}
 snakeviz = "^2.1.1"
