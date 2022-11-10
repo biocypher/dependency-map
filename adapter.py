@@ -6,20 +6,55 @@ BioCypher - CKG prototype
 """
 
 import csv
+from enum import Enum
+from typing import Optional
 
 from biocypher._logger import logger
 
 logger.debug(f"Loading module {__name__}.")
 
+class DepMapNodes(Enum):
+    """
+    DepMap nodes.
+    """
+
+    GENE = "gene"
+    CELL_LINE = "cellModel"
+    COMPOUND = "compound"
+    SEQUENCE_VARIANT = "CFE"
+
+class DepMapEdges(Enum):
+    """
+    DepMap edges.
+    """
+
+    GENE_TO_GENE = "gene_int"
+    GENE_TO_CELL_LINE = "CRISPRKO"
+    SEQUENCE_VARIANT_TO_GENE = "CFEinv"
+    SEQUENCE_VARIANT_TO_CELL_LINE = "CFEobs"
+    SEQUENCE_VARIANT_TO_COMPOUND = "response"
+    COMPOUND_TO_COMPOUND = "compound_Tsim"
+    COMPOUND_TO_GENE = "compoundTarget"
 
 class DepMapAdapter:
     def __init__(
         self,
         id_batch_size: int = int(1e6),
+        node_fields: Optional[list] = None,
+        edge_fields: Optional[list] = None,
     ):
 
         self.id_batch_size = id_batch_size
 
+        if node_fields:
+            self.node_fields = [field.value for field in node_fields]
+        else:
+            self.node_labels = [field.value for field in DepMapNodes]
+
+        if edge_fields:
+            self.edge_fields = [field.value for field in edge_fields]
+        else:
+            self.edge_labels = [field.value for field in DepMapEdges]
 
     def get_nodes(self):
         """
@@ -39,9 +74,7 @@ class DepMapAdapter:
             "CFE": "data/v0.5/cellModels/CFE_all.csv",
         }
 
-        node_labels = ["gene", "compound", "cellModel", "CFE"]
-
-        for label in node_labels:
+        for label in self.node_fields:
             # read csv for each label
 
             with (open(loc_dict[label], "r")) as f:
@@ -76,17 +109,7 @@ class DepMapAdapter:
             "compoundTarget": "data/v0.5/compounds/compoundTarget_lit.csv",
         }
 
-        rel_labels = [
-            "gene_int",
-            "CRISPRKO",
-            "CFEinv",
-            "CFEobs",
-            "response",
-            "compound_Tsim",
-            "compoundTarget",
-        ]
-
-        for label in rel_labels:
+        for label in self.edge_fields:
 
             # read csv for each label
             with (open(loc_dict[label], "r")) as f:

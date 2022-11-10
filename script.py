@@ -2,7 +2,7 @@ import cProfile
 import io
 import pstats
 
-from adapter import DepMapAdapter
+from adapter import DepMapAdapter, DepMapEdges, DepMapNodes
 import biocypher
 
 PROFILE = False
@@ -29,8 +29,26 @@ def main():
         quote_char='"',
     )
 
+    # select fields from adapter
+    node_fields = [
+        DepMapNodes.GENE,
+        DepMapNodes.CELL_LINE,
+        DepMapNodes.COMPOUND,
+        DepMapNodes.SEQUENCE_VARIANT,
+    ]
+
+    edge_fields = [
+        DepMapEdges.GENE_TO_GENE,
+        DepMapEdges.GENE_TO_CELL_LINE,
+        DepMapEdges.SEQUENCE_VARIANT_TO_GENE,
+        DepMapEdges.SEQUENCE_VARIANT_TO_CELL_LINE,
+        DepMapEdges.SEQUENCE_VARIANT_TO_COMPOUND,
+        DepMapEdges.COMPOUND_TO_COMPOUND,
+        DepMapEdges.COMPOUND_TO_GENE,
+    ]
+
     # create adapter
-    depmap = DepMapAdapter()
+    depmap = DepMapAdapter(node_fields=node_fields, edge_fields=edge_fields)
 
     # write nodes and edges to csv
     driver.write_nodes(depmap.get_nodes())

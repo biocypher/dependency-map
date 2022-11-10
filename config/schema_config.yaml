@@ -120,7 +120,7 @@ sequence variant: # could be more granular - CKG somatic mutation etc
 
 # Edges
 
-post translational interaction:
+pairwise gene to gene interaction:
   represented_as: edge
   preferred_id: custom
   source: gene # implications of "flattening" gene and protein?
