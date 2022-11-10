@@ -9,7 +9,7 @@ PROFILE = False
 
 def main():
     """
-    Run adapter to import data into Neo4j.
+    Connect BioCypher to DepMap adapter to import data into Neo4j.
 
     Optionally, run with profiling.
     """

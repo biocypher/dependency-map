@@ -8,6 +8,7 @@ BioCypher - CKG prototype
 import csv
 from enum import Enum
 from typing import Optional
+from bioregistry import normalize_curie
 
 from biocypher._logger import logger
 
@@ -132,6 +133,15 @@ def _process_node_id(_id, _type):
 
     if '"' in _id:
         _id = _id.replace('"', "")
+
+    if _type == "gene":
+        _id = normalize_curie("ensembl:" + _id)
+    elif _type == "cellModel":
+        _id = normalize_curie("cosmic.cell:" + _id)
+    elif _type == "compound":
+        _id = "compoundname:" + _id
+    elif _type == "CFE":
+        _id = "variant:" + _id
 
     return _id
 
