@@ -2,10 +2,11 @@ import cProfile
 import io
 import pstats
 
-from adapter import DepMapAdapter, DepMapEdges, DepMapNodes
+from adapter import DepMapAdapter, DepMapEdgeType, DepMapNodeType
 import biocypher
 
 PROFILE = False
+
 
 def main():
     """
@@ -20,7 +21,7 @@ def main():
     ###############
     # ACTUAL CODE #
     ###############
-    
+
     # start biocypher
     driver = biocypher.Driver(
         offline=True,
@@ -33,24 +34,24 @@ def main():
 
     # select fields from adapter
     node_fields = [
-        DepMapNodes.GENE,
-        DepMapNodes.CELL_LINE,
-        DepMapNodes.COMPOUND,
-        DepMapNodes.SEQUENCE_VARIANT,
+        DepMapNodeType.GENE,
+        DepMapNodeType.CELL_LINE,
+        DepMapNodeType.COMPOUND,
+        DepMapNodeType.SEQUENCE_VARIANT,
     ]
 
     edge_fields = [
-        DepMapEdges.GENE_TO_GENE,
-        DepMapEdges.GENE_TO_CELL_LINE,
-        DepMapEdges.SEQUENCE_VARIANT_TO_GENE,
-        DepMapEdges.SEQUENCE_VARIANT_TO_CELL_LINE,
-        DepMapEdges.SEQUENCE_VARIANT_TO_COMPOUND,
-        DepMapEdges.COMPOUND_TO_COMPOUND,
-        DepMapEdges.COMPOUND_TO_GENE,
+        DepMapEdgeType.GENE_TO_GENE,
+        DepMapEdgeType.GENE_TO_CELL_LINE,
+        DepMapEdgeType.SEQUENCE_VARIANT_TO_GENE,
+        DepMapEdgeType.SEQUENCE_VARIANT_TO_CELL_LINE,
+        DepMapEdgeType.CELL_LINE_TO_COMPOUND,
+        DepMapEdgeType.COMPOUND_TO_COMPOUND,
+        DepMapEdgeType.COMPOUND_TO_GENE,
     ]
 
     # create adapter
-    depmap = DepMapAdapter(node_fields=node_fields, edge_fields=edge_fields)
+    depmap = DepMapAdapter(node_types=node_fields, edge_types=edge_fields)
 
     # write nodes and edges to csv
     driver.write_nodes(depmap.get_nodes())
