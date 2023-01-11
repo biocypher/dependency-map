@@ -33,6 +33,8 @@ class DepMapGeneNodeField(Enum):
     """
 
     GENE_SYMBOL = "geneName:ID(GeneID)"
+    _PRIMARY_ID = GENE_SYMBOL
+
     GENE_ENSEMBL_ID = "geneId"
     GENE_CONTIG = "contig"
     GENE_STRAND = "strand"
@@ -41,7 +43,7 @@ class DepMapGeneNodeField(Enum):
     GENE_BIOTYPE = "biotype"
     GENE_GENOME_RELEASE = "genomeRelease"
     GENE_SPECIES = "species"
-    GENE_BAGEL_ESSENTIAL = "BAGELEssential"
+    GENE_BAGEL_ESSENTIALITY = "BAGELEssential"
 
 
 class DepMapCellLineNodeField(Enum):
@@ -50,6 +52,8 @@ class DepMapCellLineNodeField(Enum):
     """
 
     CELL_LINE_NAME = "modelName:ID(CellLine-ID)"
+    _PRIMARY_ID = CELL_LINE_NAME
+
     CELL_LINE_MODEL_PASSPORT = "modelId"
     CELL_LINE_SYNONYMS = "synonyms"
     CELL_LINE_TYPE = "modelType"
@@ -101,6 +105,8 @@ class DepMapCompoundNodeField(Enum):
     """
 
     COMPOUND_NAME = "compoundName:ID(Compound-ID)"
+    _PRIMARY_ID = COMPOUND_NAME
+
     COMPOUND_ATC_CLASSIFICATION = "atcClassifications"
     COMPOUND_AVAILABILITY_TYPE = "availabilityType"
     COMPOUND_BIOTHERAPEUTIC = "biotherapeutic"
@@ -150,6 +156,7 @@ class DepMapSequenceVariantNodeField(Enum):
     """
 
     SEQUENCE_VARIANT_NAME = "cfeName:ID(CFE-ID)"
+    _PRIMARY_ID = SEQUENCE_VARIANT_NAME
 
 
 class DepMapEdgeType(Enum):
@@ -240,7 +247,7 @@ class DepMapCellLineToCompoundEdgeField(Enum):
     COMPOUND_NAME = "compoundName:END_ID(Compound-ID)"
     _PRIMARY_TARGET_ID = COMPOUND_NAME
 
-    SOURCE = "source"
+    SOURCE_DATABASE = "source"
     IC_50 = "ic50"
     IC_50_MAX = "ic50<MaxConc"
     IC_50_RATIO = "ic50Ratio"
@@ -354,7 +361,7 @@ class DepMapAdapter:
                 for row in reader:
                     _id = _process_node_id(row[0], label)
                     _label = label
-                    _props = _process_properties(
+                    _props = self._process_properties(
                         dict(zip(prop_items[1:], row[1:]))
                     )
                     yield _id, _label, _props
@@ -390,10 +397,25 @@ class DepMapAdapter:
                     _src = _process_source_id(row[0], label)
                     _tar = _process_target_id(row[1], label)
                     _label = label
-                    _props = _process_properties(
+                    _props = self._process_properties(
                         dict(zip(prop_items[2:], row[2:]))
                     )
                     yield _src, _tar, _label, _props
+
+    def _process_properties(self, _props):
+        """
+        Process properties.
+        """
+
+        for key, value in _props.items():
+
+            if key not in self.node_fields and key not in self.edge_fields:
+                continue
+
+            if '"' in value:
+                _props[key] = value.replace('"', "")
+
+        return _props
 
 
 def _process_node_id(_id, _type):
@@ -454,18 +476,6 @@ def _process_target_id(_id, _type):
         _id = "compoundname:" + _id
 
     return _id
-
-
-def _process_properties(_props):
-    """
-    Process properties.
-    """
-
-    for key, value in _props.items():
-        if '"' in value:
-            _props[key] = value.replace('"', "")
-
-    return _props
 
 
 # multi-line fields: only due to line 832 in cellModels_all.csv?
