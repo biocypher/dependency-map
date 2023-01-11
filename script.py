@@ -2,7 +2,7 @@ import cProfile
 import io
 import pstats
 
-from adapter import (
+from dmb.adapter import (
     DepMapAdapter,
     DepMapEdgeType,
     DepMapNodeType,
