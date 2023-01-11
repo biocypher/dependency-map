@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "depmap-biocypher"
+name = "dmb"
 version = "0.1.0"
 description = "DepMap BioCypher adapter"
 authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]
