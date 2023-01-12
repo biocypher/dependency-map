@@ -115,12 +115,16 @@ def main():
         skip_bad_relationships=True,
     )
 
+    # check schema
+    driver.show_ontology_structure()
+
     # create adapter
     depmap = DepMapAdapter(
         node_types=node_types,
         node_fields=node_fields,
         edge_types=edge_types,
         edge_fields=edge_fields,
+        test_mode=True,
     )
 
     # write nodes and edges to csv
@@ -131,7 +135,6 @@ def main():
     driver.write_import_call()
     driver.log_missing_bl_types()
     driver.log_duplicates()
-    driver.show_ontology_structure()
 
     ######################
     # END OF ACTUAL CODE #

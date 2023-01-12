@@ -9,7 +9,7 @@ import csv
 from enum import Enum
 from typing import Optional
 from bioregistry import normalize_curie
-from itertools import chain
+from itertools import chain, islice
 
 from biocypher._logger import logger
 
@@ -205,6 +205,8 @@ class DepMapGeneToCellLineEdgeField(Enum):
     GENE_NAME = "geneName:START_ID(Gene-ID)"
     _PRIMARY_SOURCE_ID = GENE_NAME
 
+    _TRANSLATE_SOURCE_ID_TO_ENSG = "ENSG"
+
     CELL_LINE_NAME = "modelName:END_ID(CellLine-ID)"
     _PRIMARY_TARGET_ID = CELL_LINE_NAME
 
@@ -292,10 +294,175 @@ class DepMapAdapter:
         node_fields: Optional[list] = None,
         edge_types: Optional[list] = None,
         edge_fields: Optional[list] = None,
+        test_mode: bool = False,
     ):
 
         self.id_batch_size = id_batch_size
 
+        self._set_up_types_and_fields(
+            node_types, node_fields, edge_types, edge_fields
+        )
+
+        self.test_mode = test_mode
+
+        self.symbol_to_ensg = {}
+
+    def get_nodes(self):
+        """
+        Get nodes from CSV and yield them to the batch writer.
+
+        Args:
+            label: input label of nodes to be read
+
+        Returns:
+            generator of tuples representing nodes
+        """
+
+        loc_dict = {
+            DepMapNodeType.GENE.value: "data/v0.5/genes/gene_all.csv",
+            DepMapNodeType.COMPOUND.value: "data/v0.5/compounds/compounds_all.csv",
+            DepMapNodeType.CELL_LINE.value: "data/v0.5/cellModels/cellModels_all.csv",
+            DepMapNodeType.SEQUENCE_VARIANT.value: "data/v0.5/cellModels/CFE_all.csv",
+        }
+
+        for label in self.node_types:
+            # read csv for each label
+
+            with (open(loc_dict[label], "r")) as f:
+
+                reader = csv.reader(f)
+                prop_items = next(reader)
+
+                if self.test_mode:
+                    reader = islice(reader, 0, 100)
+
+                for row in reader:
+                    _id = _process_node_id(row[0], label)
+                    _label = label
+                    _props = self._process_properties(
+                        dict(zip(prop_items[1:], row[1:]))
+                    )
+                    yield _id, _label, _props
+
+                    # symbol to ensg dict
+                    if label == DepMapNodeType.GENE.value:
+                        self.symbol_to_ensg[row[0]] = row[1]
+
+    def get_edges(self):
+        """
+        Get edges from CSV and yield them to the batch writer.
+
+        Args:
+            label: input label of edges to be read
+
+        Returns:
+            generator of tuples representing edges
+        """
+
+        loc_dict = {
+            DepMapEdgeType.GENE_TO_GENE.value: "data/v0.5/genes/gene_int_all.csv",
+            DepMapEdgeType.GENE_TO_CELL_LINE.value: "data/v0.5/cellModels/CRISPRKO_all.csv",
+            DepMapEdgeType.SEQUENCE_VARIANT_TO_GENE.value: "data/v0.5/cellModels/CFEinv_all.csv",
+            DepMapEdgeType.SEQUENCE_VARIANT_TO_CELL_LINE.value: "data/v0.5/cellModels/CFEobs_all.csv",
+            DepMapEdgeType.CELL_LINE_TO_COMPOUND.value: "data/v0.5/compounds/response_all.csv",
+            DepMapEdgeType.COMPOUND_TO_COMPOUND.value: "data/v0.5/compounds/compound_Tsim_ALL.csv",
+            DepMapEdgeType.COMPOUND_TO_GENE.value: "data/v0.5/compounds/compoundTarget_lit.csv",
+        }
+
+        for label in self.edge_types:
+
+            # read csv for each label
+            with (open(loc_dict[label], "r")) as f:
+
+                reader = csv.reader(f)
+                prop_items = next(reader)
+
+                if self.test_mode:
+                    reader = islice(reader, 0, 100)
+
+                for row in reader:
+                    _src = self._process_source_id(row[0], label)
+                    _tar = _process_target_id(row[1], label)
+                    _label = label
+                    _props = self._process_properties(
+                        dict(zip(prop_items[2:], row[2:]))
+                    )
+
+                    if not _src and _tar:
+                        continue
+
+                    yield _src, _tar, _label, _props
+
+    def _process_properties(self, _props):
+        """
+        Process properties.
+        """
+
+        for key, value in _props.items():
+
+            if key not in self.node_fields and key not in self.edge_fields:
+                continue
+
+            if '"' in value:
+                _props[key] = value.replace('"', "")
+
+        return _props
+
+    def _process_source_id(self, _id, _type):
+        """
+        Process source ids.
+        """
+
+        if _type in [
+            DepMapEdgeType.GENE_TO_GENE.value,
+            DepMapEdgeType.GENE_TO_CELL_LINE.value,
+        ]:
+
+            normalised_id = normalize_curie("hgnc.symbol:" + _id)
+
+        elif _type in [
+            DepMapEdgeType.SEQUENCE_VARIANT_TO_GENE.value,
+            DepMapEdgeType.SEQUENCE_VARIANT_TO_CELL_LINE.value,
+            DepMapEdgeType.CELL_LINE_TO_COMPOUND.value,
+        ]:
+
+            normalised_id = "variant:" + _id
+
+        elif _type in [
+            DepMapEdgeType.COMPOUND_TO_COMPOUND.value,
+            DepMapEdgeType.COMPOUND_TO_GENE.value,
+        ]:
+
+            normalised_id = "compoundname:" + _id
+
+        if (
+            DepMapGeneToCellLineEdgeField._TRANSLATE_SOURCE_ID_TO_ENSG.value
+            in self.edge_fields
+        ):
+            translated = self._get_ensg_from_symbol(_id)
+            if translated:
+                normalised_id = normalize_curie("ensembl:" + translated)
+            else:
+                normalised_id = None
+
+        return normalised_id
+
+    def _get_ensg_from_symbol(self, symbol):
+        """
+        Get ensg from symbol.
+        """
+
+        if symbol in self.symbol_to_ensg:
+
+            return self.symbol_to_ensg[symbol]
+
+        else:
+
+            return None
+
+    def _set_up_types_and_fields(
+        self, node_types, node_fields, edge_types, edge_fields
+    ):
         if node_types:
             self.node_types = [field.value for field in node_types]
         else:
@@ -334,88 +501,17 @@ class DepMapAdapter:
                 )
             ]
 
-    def get_nodes(self):
-        """
-        Get nodes from CSV and yield them to the batch writer.
+        if (
+            DepMapGeneToCellLineEdgeField._TRANSLATE_SOURCE_ID_TO_ENSG.value
+            in self.edge_fields
+        ):
 
-        Args:
-            label: input label of nodes to be read
-
-        Returns:
-            generator of tuples representing nodes
-        """
-
-        loc_dict = {
-            "gene": "data/v0.5/genes/gene_all.csv",
-            "compound": "data/v0.5/compounds/compounds_all.csv",
-            "cellModel": "data/v0.5/cellModels/cellModels_all.csv",
-            "CFE": "data/v0.5/cellModels/CFE_all.csv",
-        }
-
-        for label in self.node_types:
-            # read csv for each label
-
-            with (open(loc_dict[label], "r")) as f:
-                reader = csv.reader(f)
-                prop_items = next(reader)
-                for row in reader:
-                    _id = _process_node_id(row[0], label)
-                    _label = label
-                    _props = self._process_properties(
-                        dict(zip(prop_items[1:], row[1:]))
-                    )
-                    yield _id, _label, _props
-
-    def get_edges(self):
-        """
-        Get edges from CSV and yield them to the batch writer.
-
-        Args:
-            label: input label of edges to be read
-
-        Returns:
-            generator of tuples representing edges
-        """
-
-        loc_dict = {
-            "gene_int": "data/v0.5/genes/gene_int_all.csv",
-            "CRISPRKO": "data/v0.5/cellModels/CRISPRKO_all.csv",
-            "CFEinv": "data/v0.5/cellModels/CFEinv_all.csv",
-            "CFEobs": "data/v0.5/cellModels/CFEobs_all.csv",
-            "response": "data/v0.5/compounds/response_all.csv",
-            "compound_Tsim": "data/v0.5/compounds/compound_Tsim_ALL.csv",
-            "compoundTarget": "data/v0.5/compounds/compoundTarget_lit.csv",
-        }
-
-        for label in self.edge_types:
-
-            # read csv for each label
-            with (open(loc_dict[label], "r")) as f:
-                reader = csv.reader(f)
-                prop_items = next(reader)
-                for row in reader:
-                    _src = _process_source_id(row[0], label)
-                    _tar = _process_target_id(row[1], label)
-                    _label = label
-                    _props = self._process_properties(
-                        dict(zip(prop_items[2:], row[2:]))
-                    )
-                    yield _src, _tar, _label, _props
-
-    def _process_properties(self, _props):
-        """
-        Process properties.
-        """
-
-        for key, value in _props.items():
-
-            if key not in self.node_fields and key not in self.edge_fields:
-                continue
-
-            if '"' in value:
-                _props[key] = value.replace('"', "")
-
-        return _props
+            logger.warning(
+                "Translating gene symbols to ensembl ids. "
+                "Information may be lost."
+            )
+            if DepMapNodeType.GENE.value not in self.node_types:
+                self.node_types.append(DepMapNodeType.GENE.value)
 
 
 def _process_node_id(_id, _type):
@@ -426,34 +522,14 @@ def _process_node_id(_id, _type):
     if '"' in _id:
         _id = _id.replace('"', "")
 
-    if _type == "gene":
+    if _type == DepMapNodeType.GENE.value:
         _id = normalize_curie("hgnc.symbol:" + _id)
-    elif _type == "cellModel":
+    elif _type == DepMapNodeType.CELL_LINE.value:
         _id = normalize_curie("cosmic.cell:" + _id)
-    elif _type == "compound":
+    elif _type == DepMapNodeType.COMPOUND.value:
         _id = "compoundname:" + _id
-    elif _type == "CFE":
+    elif _type == DepMapNodeType.SEQUENCE_VARIANT.value:
         _id = "variant:" + _id
-
-    return _id
-
-
-def _process_source_id(_id, _type):
-    """
-    Process source ids.
-    """
-
-    if _type in ["gene_int", "CRISPRKO"]:
-
-        _id = normalize_curie("hgnc.symbol:" + _id)
-
-    elif _type in ["CFEinv", "CFEobs", "response"]:
-
-        _id = "variant:" + _id
-
-    elif _type in ["compound_Tsim", "compoundTarget"]:
-
-        _id = "compoundname:" + _id
 
     return _id
 
@@ -463,15 +539,25 @@ def _process_target_id(_id, _type):
     Process target ids.
     """
 
-    if _type in ["gene_int", "CFEinv", "compoundTarget"]:
+    if _type in [
+        DepMapEdgeType.GENE_TO_GENE.value,
+        DepMapEdgeType.SEQUENCE_VARIANT_TO_GENE.value,
+        DepMapEdgeType.COMPOUND_TO_GENE.value,
+    ]:
 
         _id = normalize_curie("hgnc.symbol:" + _id)
 
-    elif _type in ["CRISPRKO", "CFEobs"]:
+    elif _type in [
+        DepMapEdgeType.GENE_TO_CELL_LINE.value,
+        DepMapEdgeType.SEQUENCE_VARIANT_TO_CELL_LINE.value,
+    ]:
 
         _id = normalize_curie("cosmic.cell:" + _id)
 
-    elif _type in ["response", "compound_Tsim"]:
+    elif _type in [
+        DepMapEdgeType.CELL_LINE_TO_COMPOUND.value,
+        DepMapEdgeType.COMPOUND_TO_COMPOUND.value,
+    ]:
 
         _id = "compoundname:" + _id
 
