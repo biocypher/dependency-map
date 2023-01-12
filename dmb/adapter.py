@@ -307,6 +307,10 @@ class DepMapAdapter:
 
         self.symbol_to_ensg = {}
 
+        self.data_source = "DepMap"
+        self.data_version = "v0.5"
+        self.data_licence = "None"
+
     def get_nodes(self):
         """
         Get nodes from CSV and yield them to the batch writer.
@@ -405,6 +409,11 @@ class DepMapAdapter:
 
             if '"' in value:
                 _props[key] = value.replace('"', "")
+
+        #  generic source, version and licence
+        _props["source"] = self.data_source
+        _props["version"] = self.data_version
+        _props["licence"] = self.data_licence
 
         return _props
 

@@ -113,6 +113,7 @@ def main():
         quote_char='"',
         skip_duplicate_nodes=True,
         skip_bad_relationships=True,
+        strict_mode=True,
     )
 
     # check schema
