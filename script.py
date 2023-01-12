@@ -129,7 +129,7 @@ def main():
     )
 
     # write nodes and edges to csv
-    driver.write_nodes(depmap.get_nodes())
+    # driver.write_nodes(depmap.get_nodes())
     driver.write_edges(depmap.get_edges())
 
     # convenience and stats

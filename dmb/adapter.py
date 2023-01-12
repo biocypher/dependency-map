@@ -305,8 +305,6 @@ class DepMapAdapter:
 
         self.test_mode = test_mode
 
-        self.symbol_to_ensg = {}
-
         self.data_source = "DepMap"
         self.data_version = "v0.5"
         self.data_licence = "None"
@@ -347,10 +345,6 @@ class DepMapAdapter:
                         dict(zip(prop_items[1:], row[1:]))
                     )
                     yield _id, _label, _props
-
-                    # symbol to ensg dict
-                    if label == DepMapNodeType.GENE.value:
-                        self.symbol_to_ensg[row[0]] = row[1]
 
     def get_edges(self):
         """
@@ -519,8 +513,23 @@ class DepMapAdapter:
                 "Translating gene symbols to ensembl ids. "
                 "Information may be lost."
             )
-            if DepMapNodeType.GENE.value not in self.node_types:
-                self.node_types.append(DepMapNodeType.GENE.value)
+            self._translate_symbol_to_ensg()
+
+    def _translate_symbol_to_ensg(self):
+        """
+        Translate symbol to ensg.
+        """
+
+        self.symbol_to_ensg = {}
+
+        with (open("data/v0.5/genes/gene_all.csv", "r")) as f:
+
+            reader = csv.reader(f)
+            next(reader)
+
+            for row in reader:
+
+                self.symbol_to_ensg[row[0]] = row[1]
 
 
 def _process_node_id(_id, _type):
