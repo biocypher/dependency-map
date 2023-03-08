@@ -95,7 +95,7 @@ chemical to chemical similarity association:
     tanimotoSim: float
 
 small molecule to gene association:
-  is_a: chemical to gene association
+  is_a: [chemical to gene association, association]
   represented_as: edge
   source: small molecule
   target: gene
