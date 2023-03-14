@@ -18,7 +18,7 @@ from dmb.adapter import (
     DepMapCompoundToCompoundEdgeField,
     DepMapCompoundToGeneEdgeField,
 )
-import biocypher
+from biocypher import BioCypher
 
 PROFILE = False
 
@@ -106,18 +106,10 @@ def main():
     ###############
 
     # start biocypher
-    driver = biocypher.Driver(
-        offline=True,
-        db_name="neo4j",
-        user_schema_config_path="config/schema_config.yaml",
-        quote_char='"',
-        skip_duplicate_nodes=True,
-        skip_bad_relationships=True,
-        strict_mode=True,
-    )
+    bc = BioCypher()
 
     # check schema
-    driver.show_ontology_structure()
+    bc.show_ontology_structure()
 
     # create adapter
     depmap = DepMapAdapter(
@@ -130,12 +122,12 @@ def main():
 
     # write nodes and edges to csv
     # driver.write_nodes(depmap.get_nodes())
-    driver.write_edges(depmap.get_edges())
+    bc.write_edges(depmap.get_edges())
 
     # convenience and stats
-    driver.write_import_call()
-    driver.log_missing_bl_types()
-    driver.log_duplicates()
+    bc.write_import_call()
+    bc.log_missing_bl_types()
+    bc.log_duplicates()
 
     ######################
     # END OF ACTUAL CODE #
