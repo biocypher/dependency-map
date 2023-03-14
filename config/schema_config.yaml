@@ -1,7 +1,5 @@
 title: BioCypher adapter for Dependency Map graph
 
-# Nodes
-
 gene:
   represented_as: node
   preferred_id: hgnc.symbol
@@ -34,8 +32,6 @@ sequence variant: # could be more granular - CKG somatic mutation etc
   represented_as: node
   preferred_id: name
   label_in_input: CFE
-
-# Edges
 
 pairwise gene to gene interaction:
   represented_as: edge
